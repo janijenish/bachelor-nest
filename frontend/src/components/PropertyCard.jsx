@@ -1,50 +1,63 @@
 import { useNavigate } from "react-router-dom";
+
 const PropertyCard = ({ property }) => {
+
+  const navigate = useNavigate();
 
   return (
 
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
+    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
 
-      <img
-        src={property.image || "https://via.placeholder.com/400"}
-        alt={property.title}
-        className="w-full h-48 object-cover"
-      />
+      <div className="relative">
+        <img
+          src={property.image || "https://via.placeholder.com/500x320?text=Rental+Property"}
+          alt={property.title}
+          className="h-52 w-full object-cover"
+        />
 
-      <div className="p-4">
+        {property.bachelorAllowed && (
+          <span className="absolute left-3 top-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow">
+            Bachelor Friendly
+          </span>
+        )}
+      </div>
 
-        <h2 className="text-lg font-semibold">
-          {property.title}
-        </h2>
+      <div className="space-y-4 p-4">
 
-        <p className="text-gray-500 text-sm">
-          📍 {property.location}
-        </p>
+        <div>
+          <h2 className="line-clamp-1 text-lg font-bold text-slate-950">
+            {property.title}
+          </h2>
 
-        <p className="text-green-600 font-bold mt-2 text-lg">
-          ₹ {property.price}
-        </p>
+          <p className="mt-1 line-clamp-1 text-sm text-slate-500">
+            {property.location}
+          </p>
+        </div>
 
-        <div className="flex justify-between items-center mt-3">
+        <div className="flex items-end justify-between gap-3">
 
-          {property.bachelorAllowed && (
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
-              Bachelor Friendly
-            </span>
-          )}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Monthly rent
+            </p>
+            <p className="text-xl font-bold text-emerald-600">
+              Rs. {property.price}
+            </p>
+          </div>
 
-         <button
-  onClick={() => navigate(`/property/${property._id}`)}
-  className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
->
-  View
-</button>
+          <button
+            type="button"
+            onClick={() => navigate(`/property/${property._id}`)}
+            className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            View
+          </button>
 
         </div>
 
       </div>
 
-    </div>
+    </article>
 
   );
 

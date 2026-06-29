@@ -35,7 +35,7 @@ function App() {
         <Route
           path="/saved"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["tenant"]}>
               <Saved />
             </ProtectedRoute>
           }

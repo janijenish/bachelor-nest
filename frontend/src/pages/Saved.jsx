@@ -6,22 +6,24 @@ const Saved = () => {
 
   const [properties, setProperties] = useState([]);
 
-  const fetchSaved = async () => {
-
-    try {
-
-      const res = await API.get("/users/saved-properties");
-
-      setProperties(res.data);
-
-    } catch (error) {
-      console.error(error);
-    }
-
-  };
-
   useEffect(() => {
+
+    const fetchSaved = async () => {
+
+      try {
+
+        const res = await API.get("/users/saved-properties");
+
+        setProperties(res.data);
+
+      } catch (error) {
+        console.error(error);
+      }
+
+    };
+
     fetchSaved();
+
   }, []);
 
   const handleRemove = async (id) => {
@@ -30,7 +32,9 @@ const Saved = () => {
 
       await API.delete(`/properties/${id}/save`);
 
-      setProperties(properties.filter(p => p._id !== id));
+      setProperties((currentProperties) => (
+        currentProperties.filter(p => p._id !== id)
+      ));
 
     } catch (error) {
       console.error(error);

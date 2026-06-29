@@ -33,7 +33,7 @@ const PropertyDetails = () => {
       await API.post(`/properties/${property._id}/save`);
       alert("Saved successfully ❤️");
     } catch (error) {
-      alert("Login required");
+      alert(error.response?.data?.message || "Unable to save property");
     }
   };
 
