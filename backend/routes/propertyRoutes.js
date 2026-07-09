@@ -44,6 +44,7 @@ router.put(
   "/:id",
   protect,
   authorizeRoles("landlord"),
+  upload.single("image"),
   updateProperty
 );
 

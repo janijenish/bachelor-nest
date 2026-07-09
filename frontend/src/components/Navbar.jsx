@@ -27,7 +27,7 @@ const Navbar = () => {
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600 text-white">
             BR
           </span>
-          Rentals
+          Bachelor Nest
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -53,6 +53,12 @@ const Navbar = () => {
               {user.role === "tenant" && (
                 <NavLink to="/saved" className={navLinkClass}>
                   Saved
+                </NavLink>
+              )}
+
+              {user.role === "landlord" && (
+                <NavLink to="/landlord" className={navLinkClass}>
+                  My Listings
                 </NavLink>
               )}
 

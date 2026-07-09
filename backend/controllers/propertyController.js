@@ -2,6 +2,28 @@ const Property = require("../models/Property");
 const User = require("../models/User");
 const cloudinary = require("../utils/cloudinary");
 
+const toBoolean = (value, fallback = false) => {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return value === "true" || value === "1";
+};
+
+const toNumber = (value, fallback = 0) => {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
 
 // CREATE PROPERTY
 exports.createProperty = async (req, res) => {
@@ -18,9 +40,9 @@ exports.createProperty = async (req, res) => {
   const property = await Property.create({
     title,
     description,
-    price,
+    price: toNumber(price),
     location,
-    bachelorAllowed,
+    bachelorAllowed: toBoolean(bachelorAllowed, true),
     furnishing,
     image: imageUrl,
     postedBy: req.user._id
@@ -118,12 +140,23 @@ exports.updateProperty = async (req, res) => {
 
   const { title, description, price, location, bachelorAllowed, furnishing } = req.body;
 
+  let imageUrl;
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    imageUrl = result.secure_url;
+  }
+
   property.title = title || property.title;
   property.description = description || property.description;
-  property.price = price || property.price;
+  property.price = price ? toNumber(price, property.price) : property.price;
   property.location = location || property.location;
-  property.bachelorAllowed = bachelorAllowed ?? property.bachelorAllowed;
+  property.bachelorAllowed =
+    bachelorAllowed === undefined || bachelorAllowed === null || bachelorAllowed === ""
+      ? property.bachelorAllowed
+      : toBoolean(bachelorAllowed, property.bachelorAllowed);
   property.furnishing = furnishing || property.furnishing;
+  property.image = imageUrl || property.image;
 
   const updated = await property.save();
 

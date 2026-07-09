@@ -78,8 +78,11 @@ const Register = () => {
           <div className="mb-8">
             <p className="text-sm font-medium text-emerald-600">Create your account</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-950">
-              Start your rental journey
+              Create Your Bachelor Nest Account
             </h1>
+            <p className="mt-2 text-sm text-slate-500">
+              Join Bachelor Nest and discover trusted rental listings.
+            </p>
             <p className="mt-2 text-sm text-slate-500">
               Already registered?{" "}
               <Link to="/login" className="font-semibold text-emerald-600 hover:text-emerald-700">
@@ -188,10 +191,10 @@ const Register = () => {
 
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-emerald-100">
-              Built for bachelors and landlords
+              Bachelor Nest
             </p>
             <h2 className="mt-4 text-4xl font-bold leading-tight">
-              Search smarter, list faster, manage everything clearly.
+              Join Bachelor Nest and discover trusted rental listings.
             </h2>
           </div>
 

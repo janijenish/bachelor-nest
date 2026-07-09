@@ -72,13 +72,13 @@ const Login = () => {
 
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">
-              Bachelor Rental Platform
+              Bachelor Nest
             </p>
             <h1 className="mt-4 text-4xl font-bold leading-tight">
-              Find verified homes without the usual rental friction.
+              Welcome Back to Bachelor Nest
             </h1>
             <p className="mt-4 text-sm leading-6 text-slate-300">
-              Save properties, contact landlords, and keep your rental search organized in one place.
+              Sign in to continue exploring verified bachelor-friendly rentals.
             </p>
           </div>
 
@@ -99,11 +99,14 @@ const Login = () => {
 
         </div>
 
-        <div className="p-6 sm:p-8 lg:p-10">
+          <div className="p-6 sm:p-8 lg:p-10">
 
           <div className="mb-8">
             <p className="text-sm font-medium text-emerald-600">Welcome back</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-950">Login to your account</h2>
+            <h2 className="mt-2 text-3xl font-bold text-slate-950">Welcome Back to Bachelor Nest</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Sign in to continue exploring verified bachelor-friendly rentals.
+            </p>
             <p className="mt-2 text-sm text-slate-500">
               New here?{" "}
               <Link to="/register" className="font-semibold text-emerald-600 hover:text-emerald-700">
