@@ -1,6 +1,7 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
 const cloudinary = require("../utils/cloudinary");
+const fs = require("fs/promises");
 
 const toBoolean = (value, fallback = false) => {
   if (value === undefined || value === null || value === "") {
@@ -24,27 +25,68 @@ const toNumber = (value, fallback = 0) => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+const collectUploadedFiles = (req) => {
+  const files = [];
+
+  if (req.file) {
+    files.push(req.file);
+  }
+
+  if (Array.isArray(req.files)) {
+    files.push(...req.files);
+    return files;
+  }
+
+  if (req.files && typeof req.files === "object") {
+    Object.values(req.files).forEach((value) => {
+      if (Array.isArray(value)) {
+        files.push(...value);
+        return;
+      }
+
+      if (value) {
+        files.push(value);
+      }
+    });
+  }
+
+  return files;
+};
+
+const uploadFilesToCloudinary = async (files) => {
+  const uploadedUrls = [];
+
+  try {
+    for (const file of files) {
+      const result = await cloudinary.uploader.upload(file.path);
+      uploadedUrls.push(result.secure_url);
+    }
+  } finally {
+    await Promise.all(
+      files.map((file) => fs.unlink(file.path).catch(() => {}))
+    );
+  }
+
+  return uploadedUrls;
+};
+
 
 // CREATE PROPERTY
 exports.createProperty = async (req, res) => {
 
-  const { title, description, price, location, bachelorAllowed, furnishing } = req.body;
-
-  let imageUrl = "";
-
-  if (req.file) {
-    const result = await cloudinary.uploader.upload(req.file.path);
-    imageUrl = result.secure_url;
-  }
+  const { title, description, price, location, furnishing } = req.body;
+  const uploadedFiles = collectUploadedFiles(req);
+  const imageUrls = uploadedFiles.length ? await uploadFilesToCloudinary(uploadedFiles) : [];
 
   const property = await Property.create({
     title,
     description,
     price: toNumber(price),
     location,
-    bachelorAllowed: toBoolean(bachelorAllowed, true),
+    bachelorAllowed: true,
     furnishing,
-    image: imageUrl,
+    images: imageUrls,
+    image: imageUrls[0] || "",
     postedBy: req.user._id
   });
 
@@ -138,25 +180,20 @@ exports.updateProperty = async (req, res) => {
     throw new Error("Not authorized");
   }
 
-  const { title, description, price, location, bachelorAllowed, furnishing } = req.body;
-
-  let imageUrl;
-
-  if (req.file) {
-    const result = await cloudinary.uploader.upload(req.file.path);
-    imageUrl = result.secure_url;
-  }
+  const { title, description, price, location, furnishing } = req.body;
+  const uploadedFiles = collectUploadedFiles(req);
+  const imageUrls = uploadedFiles.length ? await uploadFilesToCloudinary(uploadedFiles) : [];
 
   property.title = title || property.title;
   property.description = description || property.description;
   property.price = price ? toNumber(price, property.price) : property.price;
   property.location = location || property.location;
-  property.bachelorAllowed =
-    bachelorAllowed === undefined || bachelorAllowed === null || bachelorAllowed === ""
-      ? property.bachelorAllowed
-      : toBoolean(bachelorAllowed, property.bachelorAllowed);
+  property.bachelorAllowed = true;
   property.furnishing = furnishing || property.furnishing;
-  property.image = imageUrl || property.image;
+  if (imageUrls.length > 0) {
+    property.images = imageUrls;
+    property.image = imageUrls[0];
+  }
 
   const updated = await property.save();
 

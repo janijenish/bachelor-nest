@@ -17,6 +17,10 @@ const {
 
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 const upload = require("../utils/upload");
+const propertyImagesUpload = upload.fields([
+  { name: "images", maxCount: 8 },
+  { name: "image", maxCount: 1 }
+]);
 
 
 /* =========================
@@ -28,7 +32,7 @@ router.post(
   "/",
   protect,
   authorizeRoles("landlord"),
-  upload.single("image"),
+  propertyImagesUpload,
   createProperty
 );
 
@@ -45,7 +49,7 @@ router.put(
   "/:id",
   protect,
   authorizeRoles("landlord"),
-  upload.single("image"),
+  propertyImagesUpload,
   updateProperty
 );
 

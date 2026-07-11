@@ -6,7 +6,6 @@ const emptyForm = {
   description: "",
   price: "",
   location: "",
-  bachelorAllowed: "true",
   furnishing: "",
 };
 
@@ -18,9 +17,9 @@ const LandlordDashboard = () => {
     whatsappNumber: "",
   });
   const [editingId, setEditingId] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedImageName, setSelectedImageName] = useState("");
-  const [currentImage, setCurrentImage] = useState("");
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedImageNames, setSelectedImageNames] = useState([]);
+  const [currentImages, setCurrentImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
@@ -65,9 +64,9 @@ const LandlordDashboard = () => {
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
-    setSelectedImage(null);
-    setSelectedImageName("");
-    setCurrentImage("");
+    setSelectedImages([]);
+    setSelectedImageNames([]);
+    setCurrentImages([]);
   };
 
   const handleChange = (event) => {
@@ -80,10 +79,13 @@ const LandlordDashboard = () => {
   };
 
   const handleImageChange = (event) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter((file) => {
+      return ["image/jpeg", "image/jpg", "image/png"].includes(file.type);
+    });
 
-    setSelectedImage(file || null);
-    setSelectedImageName(file ? file.name : "");
+    setSelectedImages(validFiles);
+    setSelectedImageNames(validFiles.map((file) => file.name));
   };
 
   const handleContactChange = (event) => {
@@ -102,12 +104,11 @@ const LandlordDashboard = () => {
       description: property.description || "",
       price: property.price?.toString() || "",
       location: property.location || "",
-      bachelorAllowed: property.bachelorAllowed ? "true" : "false",
       furnishing: property.furnishing || "",
     });
-    setSelectedImage(null);
-    setSelectedImageName("");
-    setCurrentImage(property.image || "");
+    setSelectedImages([]);
+    setSelectedImageNames([]);
+    setCurrentImages(property.images?.length ? property.images : property.image ? [property.image] : []);
     setError("");
     setMessage("");
   };
@@ -197,12 +198,11 @@ const LandlordDashboard = () => {
       payload.append("description", form.description.trim());
       payload.append("price", form.price);
       payload.append("location", form.location.trim());
-      payload.append("bachelorAllowed", form.bachelorAllowed);
       payload.append("furnishing", form.furnishing.trim());
 
-      if (selectedImage) {
-        payload.append("image", selectedImage);
-      }
+      selectedImages.forEach((file) => {
+        payload.append("images", file);
+      });
 
       if (editingId) {
         await API.put(`/properties/${editingId}`, payload);
@@ -382,7 +382,7 @@ const LandlordDashboard = () => {
                 {editingId ? "Edit property" : "New property"}
               </p>
               <h2 className="mt-1 text-2xl font-bold text-slate-950">
-                {editingId ? "Update listing details" : "Add a property for bachelors"}
+                {editingId ? "Update listing details" : "Add a property listing"}
               </h2>
             </div>
 
@@ -460,37 +460,6 @@ const LandlordDashboard = () => {
             </div>
 
             <div>
-              <span className="mb-2 block text-sm font-medium text-slate-700">
-                Bachelor allowed
-              </span>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "Yes", value: "true" },
-                  { label: "No", value: "false" },
-                ].map((option) => (
-                  <label
-                    key={option.value}
-                    className={`cursor-pointer rounded-2xl border px-4 py-3 text-center text-sm font-semibold transition ${
-                      form.bachelorAllowed === option.value
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                        : "border-slate-200 text-slate-600 hover:border-slate-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="bachelorAllowed"
-                      value={option.value}
-                      checked={form.bachelorAllowed === option.value}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
               <label htmlFor="furnishing" className="mb-2 block text-sm font-medium text-slate-700">
                 Furnishing
               </label>
@@ -506,30 +475,53 @@ const LandlordDashboard = () => {
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="image" className="mb-2 block text-sm font-medium text-slate-700">
-                Property image
+              <label htmlFor="images" className="mb-2 block text-sm font-medium text-slate-700">
+                Property photos
               </label>
               <input
-                id="image"
-                name="image"
+                id="images"
+                name="images"
                 type="file"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                multiple
                 onChange={handleImageChange}
                 className="block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
               />
 
-              <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                {editingId && currentImage ? (
-                  <p className="break-all">
-                    Current image: <span className="font-medium text-slate-900">{currentImage}</span>
-                  </p>
+              <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                {editingId && currentImages.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="font-medium text-slate-900">
+                      Current photos: {currentImages.length}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {currentImages.map((photo, index) => (
+                        <img
+                          key={`${photo}-${index}`}
+                          src={photo}
+                          alt={`Current property ${index + 1}`}
+                          className="h-24 w-full rounded-xl object-cover"
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ) : (
-                  <p>No image selected yet</p>
+                  <p>No photos selected yet</p>
                 )}
-                {selectedImageName && (
-                  <p className="mt-1">
-                    New file: <span className="font-medium text-slate-900">{selectedImageName}</span>
-                  </p>
+
+                {selectedImageNames.length > 0 && (
+                  <div className="mt-3">
+                    <p className="font-medium text-slate-900">
+                      New photos selected: {selectedImageNames.length}
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {selectedImageNames.map((fileName) => (
+                        <li key={fileName} className="break-all">
+                          {fileName}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             </div>
@@ -568,68 +560,92 @@ const LandlordDashboard = () => {
             </div>
           ) : (
             <div className="grid gap-5 lg:grid-cols-2">
-              {properties.map((property) => (
-                <article
-                  key={property._id}
-                  className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
-                >
-                  <div className="relative">
-                    <img
-                      src={property.image || "https://via.placeholder.com/800x400?text=Property"}
-                      alt={property.title}
-                      className="h-56 w-full object-cover"
-                    />
-                    {property.bachelorAllowed && (
-                      <span className="absolute left-4 top-4 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">
-                        Bachelor friendly
-                      </span>
-                    )}
-                  </div>
+              {properties.map((property) => {
+                const displayImages = property.images?.length
+                  ? property.images
+                  : property.image
+                    ? [property.image]
+                    : [];
+                const coverImage = displayImages[0] || "https://via.placeholder.com/800x400?text=Property";
 
-                  <div className="space-y-4 p-5">
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-950">{property.title}</h3>
-                      <p className="mt-1 text-sm text-slate-500">{property.location}</p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
-                        Rs. {property.price}
-                      </span>
-                      {property.furnishing && (
-                        <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
-                          {property.furnishing}
+                return (
+                  <article
+                    key={property._id}
+                    className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+                  >
+                    <div className="relative">
+                      <img
+                        src={coverImage}
+                        alt={property.title}
+                        className="h-56 w-full object-cover"
+                      />
+                      {displayImages.length > 1 && (
+                        <span className="absolute left-4 top-4 rounded-full bg-slate-950/85 px-3 py-1 text-xs font-semibold text-white">
+                          {displayImages.length} photos
                         </span>
                       )}
-                      <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
-                        {property.interestedUsers?.length || 0} interested users
-                      </span>
                     </div>
 
-                    <p className="line-clamp-3 text-sm leading-6 text-slate-600">
-                      {property.description}
-                    </p>
+                    <div className="space-y-4 p-5">
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-950">{property.title}</h3>
+                        <p className="mt-1 text-sm text-slate-500">{property.location}</p>
+                      </div>
 
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(property)}
-                        className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                      >
-                        Edit details
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(property._id)}
-                        disabled={deletingId === property._id}
-                        className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {deletingId === property._id ? "Removing..." : "Remove property"}
-                      </button>
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                          Rs. {property.price}
+                        </span>
+                        {property.furnishing && (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                            {property.furnishing}
+                          </span>
+                        )}
+                        {displayImages.length > 0 && (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                            {displayImages.length} photo{displayImages.length > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="line-clamp-3 text-sm leading-6 text-slate-600">
+                        {property.description}
+                      </p>
+
+                      {displayImages.length > 0 && (
+                        <div className="grid grid-cols-4 gap-2">
+                          {displayImages.slice(0, 4).map((photo, index) => (
+                            <img
+                              key={`${photo}-${index}`}
+                              src={photo}
+                              alt={`${property.title} ${index + 1}`}
+                              className="h-16 w-full rounded-xl object-cover"
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(property)}
+                          className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        >
+                          Edit details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(property._id)}
+                          disabled={deletingId === property._id}
+                          className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {deletingId === property._id ? "Removing..." : "Remove property"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>

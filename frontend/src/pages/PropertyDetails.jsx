@@ -68,6 +68,12 @@ const PropertyDetails = () => {
     }
   };
 
+  const displayImages = property?.images?.length
+    ? property.images
+    : property?.image
+      ? [property.image]
+      : [];
+
   if (loading) {
     return (
       <main className="min-h-[calc(100vh-72px)] bg-slate-50 px-4 py-10">
@@ -89,32 +95,20 @@ const PropertyDetails = () => {
   }
 
   const isTenant = currentUser?.role === "tenant";
+  const heroImage = displayImages[0] || "https://via.placeholder.com/1200x700?text=Rental+Property";
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-slate-50 px-4 py-10">
       <section className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.35fr_0.65fr]">
         <article className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <img
-            src={property.image || "https://via.placeholder.com/1200x700?text=Rental+Property"}
+            src={heroImage}
             alt={property.title}
             className="h-72 w-full object-cover sm:h-96"
           />
 
           <div className="space-y-6 p-6 sm:p-8">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-3">
-                {property.bachelorAllowed && (
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    Bachelor friendly
-                  </span>
-                )}
-                {property.furnishing && (
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    {property.furnishing}
-                  </span>
-                )}
-              </div>
-
               <div>
                 <h1 className="text-3xl font-bold text-slate-950 sm:text-4xl">{property.title}</h1>
                 <p className="mt-2 text-sm text-slate-500">{property.location}</p>
@@ -129,6 +123,22 @@ const PropertyDetails = () => {
                 {property.description}
               </p>
             </div>
+
+            {displayImages.length > 1 && (
+              <div>
+                <h2 className="text-lg font-semibold text-slate-950">Photos</h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {displayImages.map((photo, index) => (
+                    <img
+                      key={`${photo}-${index}`}
+                      src={photo}
+                      alt={`${property.title} ${index + 1}`}
+                      className="h-44 w-full rounded-2xl object-cover"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </article>
 
@@ -141,7 +151,7 @@ const PropertyDetails = () => {
               Reach out before you book a visit
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Tenants can request the landlord's contact details here and get the number saved on the
+              Tenants can request the landlord's contact details here and see the number saved on the
               property owner profile.
             </p>
 
