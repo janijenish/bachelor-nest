@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import API from "../api/axios";
+import API, { getStoredUser } from "../api/axios";
 
 const emptyForm = {
   title: "",
@@ -13,15 +13,22 @@ const emptyForm = {
 const LandlordDashboard = () => {
   const [properties, setProperties] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [contactForm, setContactForm] = useState({
+    contactNumber: "",
+    whatsappNumber: "",
+  });
   const [editingId, setEditingId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageName, setSelectedImageName] = useState("");
   const [currentImage, setCurrentImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [contactSaving, setContactSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [contactError, setContactError] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
 
   const fetchProperties = async () => {
     try {
@@ -35,8 +42,24 @@ const LandlordDashboard = () => {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      setContactError("");
+      const res = await API.get("/users/profile");
+      const profile = res.data?.user || {};
+
+      setContactForm({
+        contactNumber: profile.contactNumber || "",
+        whatsappNumber: profile.whatsappNumber || "",
+      });
+    } catch (profileError) {
+      setContactError(profileError.response?.data?.message || "Unable to load your contact details");
+    }
+  };
+
   useEffect(() => {
     fetchProperties();
+    fetchProfile();
   }, []);
 
   const resetForm = () => {
@@ -63,6 +86,15 @@ const LandlordDashboard = () => {
     setSelectedImageName(file ? file.name : "");
   };
 
+  const handleContactChange = (event) => {
+    const { name, value } = event.target;
+
+    setContactForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
   const handleEdit = (property) => {
     setEditingId(property._id);
     setForm({
@@ -78,6 +110,50 @@ const LandlordDashboard = () => {
     setCurrentImage(property.image || "");
     setError("");
     setMessage("");
+  };
+
+  const validateContactForm = () => {
+    if (!contactForm.contactNumber.trim()) {
+      return "Contact number is required";
+    }
+
+    return "";
+  };
+
+  const handleContactSubmit = async (event) => {
+    event.preventDefault();
+
+    const validationError = validateContactForm();
+
+    if (validationError) {
+      setContactError(validationError);
+      setContactMessage("");
+      return;
+    }
+
+    try {
+      setContactSaving(true);
+      setContactError("");
+      setContactMessage("");
+
+      const res = await API.put("/users/profile", {
+        contactNumber: contactForm.contactNumber.trim(),
+        whatsappNumber: contactForm.whatsappNumber.trim(),
+      });
+
+      const updatedUser = res.data?.user || {};
+
+      setContactForm({
+        contactNumber: updatedUser.contactNumber || contactForm.contactNumber.trim(),
+        whatsappNumber: updatedUser.whatsappNumber || contactForm.whatsappNumber.trim(),
+      });
+
+      setContactMessage("Contact details saved successfully");
+    } catch (profileError) {
+      setContactError(profileError.response?.data?.message || "Unable to save contact details");
+    } finally {
+      setContactSaving(false);
+    }
   };
 
   const validateForm = () => {
@@ -217,6 +293,87 @@ const LandlordDashboard = () => {
             {error || message}
           </div>
         )}
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-emerald-600">Contact details</p>
+              <h2 className="mt-1 text-2xl font-bold text-slate-950">
+                Add the contact info tenants should see
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Keep your phone number or WhatsApp number here so renters can reach you directly from the
+                property page.
+              </p>
+            </div>
+          </div>
+
+          {(contactError || contactMessage) && (
+            <div
+              className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${
+                contactError
+                  ? "border-red-200 bg-red-50 text-red-700"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              {contactError || contactMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleContactSubmit} className="mt-6 grid gap-5 md:grid-cols-2">
+            <div>
+              <label htmlFor="contactNumber" className="mb-2 block text-sm font-medium text-slate-700">
+                Contact number
+              </label>
+              <input
+                id="contactNumber"
+                name="contactNumber"
+                type="tel"
+                value={contactForm.contactNumber}
+                onChange={handleContactChange}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                placeholder="9876543210"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="whatsappNumber" className="mb-2 block text-sm font-medium text-slate-700">
+                WhatsApp number
+              </label>
+              <input
+                id="whatsappNumber"
+                name="whatsappNumber"
+                type="tel"
+                value={contactForm.whatsappNumber}
+                onChange={handleContactChange}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                placeholder="Optional"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                <p>
+                  Signed-in account:{" "}
+                  <span className="font-semibold text-slate-900">{getStoredUser()?.email || "N/A"}</span>
+                </p>
+                <p className="mt-1">
+                  Tenants will see these details on the property page when they request contact information.
+                </p>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                disabled={contactSaving}
+                className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              >
+                {contactSaving ? "Saving..." : "Save contact details"}
+              </button>
+            </div>
+          </form>
+        </section>
 
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">

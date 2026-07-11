@@ -291,3 +291,33 @@ exports.getContactRequests = async (req, res) => {
 
   res.json(properties);
 };
+
+
+// TENANT VIEW LANDLORD CONTACT DETAILS
+exports.getLandlordContactDetails = async (req, res) => {
+
+  const property = await Property.findById(req.params.id)
+    .populate("postedBy", "name email contactNumber whatsappNumber");
+
+  if (!property) {
+    res.status(404);
+    throw new Error("Property not found");
+  }
+
+  if (!property.postedBy) {
+    res.status(404);
+    throw new Error("Landlord contact details not available");
+  }
+
+  res.json({
+    propertyId: property._id,
+    propertyTitle: property.title,
+    landlord: {
+      name: property.postedBy.name,
+      email: property.postedBy.email,
+      contactNumber: property.postedBy.contactNumber || "",
+      whatsappNumber: property.postedBy.whatsappNumber || ""
+    }
+  });
+
+};

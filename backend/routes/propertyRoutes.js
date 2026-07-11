@@ -11,7 +11,8 @@ const {
   getMyProperties,
   saveProperty,
   removeSavedProperty,
-  contactLandlord
+  contactLandlord,
+  getLandlordContactDetails
 } = require("../controllers/propertyController");
 
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
@@ -102,6 +103,14 @@ router.post(
   protect,
   authorizeRoles("tenant"),
   contactLandlord
+);
+
+// Get landlord contact details
+router.get(
+  "/:id/contact-details",
+  protect,
+  authorizeRoles("tenant"),
+  getLandlordContactDetails
 );
 
 
