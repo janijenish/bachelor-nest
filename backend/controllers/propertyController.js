@@ -1,6 +1,7 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
 const cloudinary = require("../utils/cloudinary");
+const fs = require("fs/promises");
 
 const toNumber = (value, fallback = 0) => {
   if (value === undefined || value === null || value === "") {
@@ -12,6 +13,19 @@ const toNumber = (value, fallback = 0) => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+const uploadImageToCloudinary = async (file) => {
+  if (!file) {
+    return "";
+  }
+
+  try {
+    const result = await cloudinary.uploader.upload(file.path);
+    return result.secure_url;
+  } finally {
+    await fs.unlink(file.path).catch(() => {});
+  }
+};
+
 
 // CREATE PROPERTY
 exports.createProperty = async (req, res) => {
@@ -20,10 +34,7 @@ exports.createProperty = async (req, res) => {
 
   let imageUrl = "";
 
-  if (req.file) {
-    const result = await cloudinary.uploader.upload(req.file.path);
-    imageUrl = result.secure_url;
-  }
+  imageUrl = await uploadImageToCloudinary(req.file);
 
   const property = await Property.create({
     title,
@@ -124,10 +135,7 @@ exports.updateProperty = async (req, res) => {
 
   let imageUrl;
 
-  if (req.file) {
-    const result = await cloudinary.uploader.upload(req.file.path);
-    imageUrl = result.secure_url;
-  }
+  imageUrl = await uploadImageToCloudinary(req.file);
 
   property.title = title || property.title;
   property.description = description || property.description;
