@@ -17,6 +17,22 @@ const userSchema = new mongoose.Schema(
     index: true
   },
 
+  phone: {
+    type: String,
+    trim: true,
+    required() {
+      return this.role === "landlord";
+    }
+  },
+
+  whatsapp: {
+    type: String,
+    trim: true,
+    required() {
+      return this.role === "landlord";
+    }
+  },
+
   password: {
     type: String,
     required: true,

@@ -110,7 +110,7 @@ exports.getProperties = async (req, res) => {
 exports.getPropertyById = async (req, res) => {
 
   const property = await Property.findById(req.params.id)
-    .populate("postedBy", "name email")
+    .populate("postedBy", "name email phone whatsapp")
     .populate("interestedUsers", "name email")
     .populate("contactRequests.user", "name email");
 

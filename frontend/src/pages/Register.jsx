@@ -8,7 +8,9 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    role: "tenant"
+    role: "tenant",
+    phone: "",
+    whatsapp: ""
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,13 @@ const Register = () => {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      ...(name === "role" && value === "tenant"
+        ? {
+            phone: "",
+            whatsapp: ""
+          }
+        : {})
     }));
   };
 
@@ -31,6 +39,10 @@ const Register = () => {
 
     if (formData.password.length < 6) {
       return "Password must be at least 6 characters";
+    }
+
+    if (formData.role === "landlord" && (!formData.phone.trim() || !formData.whatsapp.trim())) {
+      return "Phone number and WhatsApp number are required for landlords";
     }
 
     return "";
@@ -54,7 +66,13 @@ const Register = () => {
         name: formData.name.trim(),
         email: formData.email.trim(),
         password: formData.password,
-        role: formData.role
+        role: formData.role,
+        ...(formData.role === "landlord"
+          ? {
+              phone: formData.phone.trim(),
+              whatsapp: formData.whatsapp.trim()
+            }
+          : {})
       });
 
       setStoredUser(res.data);
@@ -174,6 +192,50 @@ const Register = () => {
                 ))}
               </div>
             </div>
+
+            {formData.role === "landlord" && (
+              <>
+                <div>
+                  <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-700">
+                    Phone number
+                  </label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    autoComplete="tel"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="whatsapp" className="mb-2 block text-sm font-medium text-slate-700">
+                    WhatsApp number
+                  </label>
+                  <input
+                    id="whatsapp"
+                    name="whatsapp"
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                    value={formData.whatsapp}
+                    onChange={handleChange}
+                    autoComplete="tel"
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            {formData.role === "landlord" && (
+              <p className="text-sm text-slate-500">
+                Your email is already collected and will be shown as your mail ID.
+              </p>
+            )}
 
             <button
               type="submit"

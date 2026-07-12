@@ -14,6 +14,8 @@ const getAuthResponse = (user, message) => {
     _id: user._id,
     name: user.name,
     email: user.email,
+    phone: user.phone,
+    whatsapp: user.whatsapp,
     role: user.role,
     token: createToken(user),
     message
@@ -23,7 +25,7 @@ const getAuthResponse = (user, message) => {
 // REGISTER USER
 exports.registerUser = async (req, res) => {
 
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, phone, whatsapp } = req.body;
 
   if (!name?.trim() || !email?.trim() || !password?.trim()) {
     res.status(400);
@@ -39,6 +41,11 @@ exports.registerUser = async (req, res) => {
   const allowedRoles = ["tenant", "landlord"];
   const safeRole = allowedRoles.includes(role) ? role : "tenant";
 
+  if (safeRole === "landlord" && (!phone?.trim() || !whatsapp?.trim())) {
+    res.status(400);
+    throw new Error("Phone number and WhatsApp number are required for landlords");
+  }
+
   const userExists = await User.findOne({ email: normalizedEmail });
 
   if (userExists) {
@@ -50,7 +57,13 @@ exports.registerUser = async (req, res) => {
     name: name.trim(),
     email: normalizedEmail,
     password,
-    role: safeRole
+    role: safeRole,
+    ...(safeRole === "landlord"
+      ? {
+          phone: phone.trim(),
+          whatsapp: whatsapp.trim()
+        }
+      : {})
   });
 
   res.status(201).json(
