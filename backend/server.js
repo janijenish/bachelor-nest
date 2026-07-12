@@ -1,6 +1,9 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
+
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const helmet = require("helmet");
 
@@ -11,8 +14,7 @@ const propertyRoutes = require("./routes/propertyRoutes");
 // Error Middleware
 const { errorHandler } = require("./middleware/errorMiddleware");
 
-// Load environment variables
-dotenv.config();
+
 
 const app = express();
 
