@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { applyImageFallback, PROPERTY_IMAGE_FALLBACK } from "../utils/imageFallback";
 
 const PropertyCard = ({ property }) => {
 
@@ -10,9 +11,10 @@ const PropertyCard = ({ property }) => {
 
       <div className="relative">
         <img
-          src={property.image || "https://via.placeholder.com/500x320?text=Rental+Property"}
+          src={property.image || PROPERTY_IMAGE_FALLBACK}
           alt={property.title}
           className="h-52 w-full object-cover"
+          onError={applyImageFallback}
         />
       </div>
 

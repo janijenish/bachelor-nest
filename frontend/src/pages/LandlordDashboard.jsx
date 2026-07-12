@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../api/axios";
+import { applyImageFallback, PROPERTY_IMAGE_FALLBACK } from "../utils/imageFallback";
 
 const emptyForm = {
   title: "",
@@ -347,9 +348,10 @@ const LandlordDashboard = () => {
                 {(selectedImagePreview || currentImage) ? (
                   <div className="grid gap-0 md:grid-cols-[220px_1fr]">
                     <img
-                      src={selectedImagePreview || currentImage}
+                      src={selectedImagePreview || currentImage || PROPERTY_IMAGE_FALLBACK}
                       alt={selectedImageName || "Property preview"}
                       className="h-56 w-full object-cover md:h-full"
+                      onError={applyImageFallback}
                     />
                     <div className="space-y-2 p-4 text-sm text-slate-600">
                       <p className="font-medium text-slate-900">
@@ -412,9 +414,10 @@ const LandlordDashboard = () => {
                 >
                   <div className="relative">
                     <img
-                      src={property.image || "https://via.placeholder.com/800x400?text=Property"}
+                      src={property.image || PROPERTY_IMAGE_FALLBACK}
                       alt={property.title}
                       className="h-56 w-full object-cover"
+                      onError={applyImageFallback}
                     />
                   </div>
 

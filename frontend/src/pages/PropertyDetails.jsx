@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API from "../api/axios";
+import { applyImageFallback, PROPERTY_IMAGE_FALLBACK } from "../utils/imageFallback";
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -44,9 +45,10 @@ const PropertyDetails = () => {
     <div className="mx-auto max-w-4xl p-6">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <img
-          src={property.image || "https://via.placeholder.com/900x500?text=Property"}
+          src={property.image || PROPERTY_IMAGE_FALLBACK}
           alt={property.title}
           className="h-80 w-full object-cover"
+          onError={applyImageFallback}
         />
 
         <div className="space-y-4 p-6">
