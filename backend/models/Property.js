@@ -22,11 +22,6 @@ const propertySchema = new mongoose.Schema(
     required: true
   },
 
-  bachelorAllowed: {
-    type: Boolean,
-    default: true
-  },
-
   furnishing: {
     type: String
   },

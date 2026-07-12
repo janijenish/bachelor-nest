@@ -2,18 +2,6 @@ const Property = require("../models/Property");
 const User = require("../models/User");
 const cloudinary = require("../utils/cloudinary");
 
-const toBoolean = (value, fallback = false) => {
-  if (value === undefined || value === null || value === "") {
-    return fallback;
-  }
-
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  return value === "true" || value === "1";
-};
-
 const toNumber = (value, fallback = 0) => {
   if (value === undefined || value === null || value === "") {
     return fallback;
@@ -28,7 +16,7 @@ const toNumber = (value, fallback = 0) => {
 // CREATE PROPERTY
 exports.createProperty = async (req, res) => {
 
-  const { title, description, price, location, bachelorAllowed, furnishing } = req.body;
+  const { title, description, price, location, furnishing } = req.body;
 
   let imageUrl = "";
 
@@ -42,7 +30,6 @@ exports.createProperty = async (req, res) => {
     description,
     price: toNumber(price),
     location,
-    bachelorAllowed: toBoolean(bachelorAllowed, true),
     furnishing,
     image: imageUrl,
     postedBy: req.user._id
@@ -61,7 +48,6 @@ exports.getProperties = async (req, res) => {
   const {
     search,
     location,
-    bachelorAllowed,
     minPrice,
     maxPrice,
     page = 1,
@@ -77,10 +63,6 @@ exports.getProperties = async (req, res) => {
 
   if (location) {
     filter.location = location;
-  }
-
-  if (bachelorAllowed) {
-    filter.bachelorAllowed = bachelorAllowed === "true";
   }
 
   if (minPrice || maxPrice) {
@@ -138,7 +120,7 @@ exports.updateProperty = async (req, res) => {
     throw new Error("Not authorized");
   }
 
-  const { title, description, price, location, bachelorAllowed, furnishing } = req.body;
+  const { title, description, price, location, furnishing } = req.body;
 
   let imageUrl;
 
@@ -151,10 +133,6 @@ exports.updateProperty = async (req, res) => {
   property.description = description || property.description;
   property.price = price ? toNumber(price, property.price) : property.price;
   property.location = location || property.location;
-  property.bachelorAllowed =
-    bachelorAllowed === undefined || bachelorAllowed === null || bachelorAllowed === ""
-      ? property.bachelorAllowed
-      : toBoolean(bachelorAllowed, property.bachelorAllowed);
   property.furnishing = furnishing || property.furnishing;
   property.image = imageUrl || property.image;
 

@@ -14,12 +14,6 @@ const PropertyCard = ({ property }) => {
           alt={property.title}
           className="h-52 w-full object-cover"
         />
-
-        {property.bachelorAllowed && (
-          <span className="absolute left-3 top-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow">
-            Bachelor Friendly
-          </span>
-        )}
       </div>
 
       <div className="space-y-4 p-4">

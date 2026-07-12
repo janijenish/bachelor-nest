@@ -3,40 +3,34 @@ import { useParams } from "react-router-dom";
 import API from "../api/axios";
 
 const PropertyDetails = () => {
-
   const { id } = useParams();
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const fetchProperty = async () => {
-
       try {
         const res = await API.get(`/properties/${id}`);
         setProperty(res.data);
-        setLoading(false);
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
-
     };
 
     fetchProperty();
-
   }, [id]);
-
 
   const handleSave = async () => {
     try {
       await API.post(`/properties/${property._id}/save`);
-      alert("Saved successfully ❤️");
+      alert("Saved successfully");
     } catch (error) {
       alert(error.response?.data?.message || "Unable to save property");
     }
   };
-
 
   if (loading) {
     return <p className="p-6 text-lg">Loading...</p>;
@@ -46,67 +40,42 @@ const PropertyDetails = () => {
     return <p className="p-6 text-lg">Property not found</p>;
   }
 
-
   return (
+    <div className="mx-auto max-w-4xl p-6">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <img
+          src={property.image || "https://via.placeholder.com/900x500?text=Property"}
+          alt={property.title}
+          className="h-80 w-full object-cover"
+        />
 
-    <div className="max-w-4xl mx-auto p-6">
+        <div className="space-y-4 p-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-950">{property.title}</h1>
+            <p className="mt-2 text-slate-600">{property.location}</p>
+            <p className="mt-2 text-2xl font-bold text-emerald-600">Rs. {property.price}</p>
+          </div>
 
-      {/* Image */}
-      <img
-        src={property.image || "https://via.placeholder.com/600"}
-        alt={property.title}
-        className="w-full h-80 object-cover rounded-lg shadow"
-      />
+          <p className="leading-7 text-slate-700">{property.description}</p>
 
-      {/* Title */}
-      <h1 className="text-3xl font-bold mt-4">
-        {property.title}
-      </h1>
+          <div className="flex flex-wrap gap-3">
+            {property.furnishing && (
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+                {property.furnishing}
+              </span>
+            )}
+          </div>
 
-      {/* Location */}
-      <p className="text-gray-600 mt-2">
-        📍 {property.location}
-      </p>
-
-      {/* Price */}
-      <p className="text-green-600 text-2xl font-bold mt-2">
-        ₹ {property.price}
-      </p>
-
-      {/* Description */}
-      <p className="mt-4 text-gray-700">
-        {property.description}
-      </p>
-
-      {/* Tags */}
-      <div className="mt-4 flex gap-3 flex-wrap">
-
-        {property.bachelorAllowed && (
-          <span className="bg-green-100 text-green-700 px-3 py-1 rounded">
-            Bachelor Friendly
-          </span>
-        )}
-
-        {property.furnishing && (
-          <span className="bg-gray-100 px-3 py-1 rounded">
-            {property.furnishing}
-          </span>
-        )}
-
+          <button
+            onClick={handleSave}
+            className="rounded-full bg-pink-500 px-4 py-2 text-white transition hover:bg-pink-600"
+          >
+            Save Property
+          </button>
+        </div>
       </div>
-
-      {/* Save Button */}
-      <button
-        onClick={handleSave}
-        className="bg-pink-500 text-white px-4 py-2 rounded mt-6 hover:bg-pink-600"
-      >
-        Save Property ❤️
-      </button>
-
     </div>
-
   );
-
 };
 
 export default PropertyDetails;

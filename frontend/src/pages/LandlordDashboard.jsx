@@ -6,7 +6,6 @@ const emptyForm = {
   description: "",
   price: "",
   location: "",
-  bachelorAllowed: "true",
   furnishing: "",
 };
 
@@ -16,6 +15,7 @@ const LandlordDashboard = () => {
   const [editingId, setEditingId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageName, setSelectedImageName] = useState("");
+  const [selectedImagePreview, setSelectedImagePreview] = useState("");
   const [currentImage, setCurrentImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -39,11 +39,20 @@ const LandlordDashboard = () => {
     fetchProperties();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (selectedImagePreview) {
+        URL.revokeObjectURL(selectedImagePreview);
+      }
+    };
+  }, [selectedImagePreview]);
+
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
     setSelectedImage(null);
     setSelectedImageName("");
+    setSelectedImagePreview("");
     setCurrentImage("");
   };
 
@@ -59,8 +68,13 @@ const LandlordDashboard = () => {
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
 
+    if (selectedImagePreview) {
+      URL.revokeObjectURL(selectedImagePreview);
+    }
+
     setSelectedImage(file || null);
     setSelectedImageName(file ? file.name : "");
+    setSelectedImagePreview(file ? URL.createObjectURL(file) : "");
   };
 
   const handleEdit = (property) => {
@@ -70,11 +84,11 @@ const LandlordDashboard = () => {
       description: property.description || "",
       price: property.price?.toString() || "",
       location: property.location || "",
-      bachelorAllowed: property.bachelorAllowed ? "true" : "false",
       furnishing: property.furnishing || "",
     });
     setSelectedImage(null);
     setSelectedImageName("");
+    setSelectedImagePreview("");
     setCurrentImage(property.image || "");
     setError("");
     setMessage("");
@@ -121,7 +135,6 @@ const LandlordDashboard = () => {
       payload.append("description", form.description.trim());
       payload.append("price", form.price);
       payload.append("location", form.location.trim());
-      payload.append("bachelorAllowed", form.bachelorAllowed);
       payload.append("furnishing", form.furnishing.trim());
 
       if (selectedImage) {
@@ -225,7 +238,7 @@ const LandlordDashboard = () => {
                 {editingId ? "Edit property" : "New property"}
               </p>
               <h2 className="mt-1 text-2xl font-bold text-slate-950">
-                {editingId ? "Update listing details" : "Add a property for bachelors"}
+                {editingId ? "Update listing details" : "Add a property"}
               </h2>
             </div>
 
@@ -303,37 +316,6 @@ const LandlordDashboard = () => {
             </div>
 
             <div>
-              <span className="mb-2 block text-sm font-medium text-slate-700">
-                Bachelor allowed
-              </span>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "Yes", value: "true" },
-                  { label: "No", value: "false" },
-                ].map((option) => (
-                  <label
-                    key={option.value}
-                    className={`cursor-pointer rounded-2xl border px-4 py-3 text-center text-sm font-semibold transition ${
-                      form.bachelorAllowed === option.value
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                        : "border-slate-200 text-slate-600 hover:border-slate-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="bachelorAllowed"
-                      value={option.value}
-                      checked={form.bachelorAllowed === option.value}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
               <label htmlFor="furnishing" className="mb-2 block text-sm font-medium text-slate-700">
                 Furnishing
               </label>
@@ -361,18 +343,30 @@ const LandlordDashboard = () => {
                 className="block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
               />
 
-              <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                {editingId && currentImage ? (
-                  <p className="break-all">
-                    Current image: <span className="font-medium text-slate-900">{currentImage}</span>
-                  </p>
+              <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                {(selectedImagePreview || currentImage) ? (
+                  <div className="grid gap-0 md:grid-cols-[220px_1fr]">
+                    <img
+                      src={selectedImagePreview || currentImage}
+                      alt={selectedImageName || "Property preview"}
+                      className="h-56 w-full object-cover md:h-full"
+                    />
+                    <div className="space-y-2 p-4 text-sm text-slate-600">
+                      <p className="font-medium text-slate-900">
+                        {selectedImageName ? "Selected new image" : "Current image"}
+                      </p>
+                      <p className="break-all">
+                        {selectedImageName || currentImage}
+                      </p>
+                      {editingId && currentImage && !selectedImagePreview && (
+                        <p className="text-xs text-slate-500">
+                          This image will stay unchanged unless you upload a new one.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 ) : (
-                  <p>No image selected yet</p>
-                )}
-                {selectedImageName && (
-                  <p className="mt-1">
-                    New file: <span className="font-medium text-slate-900">{selectedImageName}</span>
-                  </p>
+                  <p className="p-4 text-sm text-slate-600">No image selected yet</p>
                 )}
               </div>
             </div>
@@ -422,11 +416,6 @@ const LandlordDashboard = () => {
                       alt={property.title}
                       className="h-56 w-full object-cover"
                     />
-                    {property.bachelorAllowed && (
-                      <span className="absolute left-4 top-4 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">
-                        Bachelor friendly
-                      </span>
-                    )}
                   </div>
 
                   <div className="space-y-4 p-5">
