@@ -17,18 +17,6 @@ const userSchema = new mongoose.Schema(
     index: true
   },
 
-  contactNumber: {
-    type: String,
-    trim: true,
-    default: ""
-  },
-
-  whatsappNumber: {
-    type: String,
-    trim: true,
-    default: ""
-  },
-
   password: {
     type: String,
     required: true,

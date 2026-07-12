@@ -5,8 +5,7 @@ const {
   registerUser,
   loginUser,
   getProfile,
-  getSavedProperties,
-  updateProfile
+  getSavedProperties
 } = require("../controllers/userController");
 
 const { getContactRequests } = require("../controllers/propertyController");
@@ -27,7 +26,6 @@ router.post("/login", loginUser);
 ========================= */
 
 router.get("/profile", protect, getProfile);
-router.put("/profile", protect, updateProfile);
 
 
 /* =========================

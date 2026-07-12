@@ -3,12 +3,6 @@ import { useNavigate } from "react-router-dom";
 const PropertyCard = ({ property }) => {
 
   const navigate = useNavigate();
-  const displayImages = property.images?.length
-    ? property.images
-    : property.image
-      ? [property.image]
-      : [];
-  const coverImage = displayImages[0] || "https://via.placeholder.com/500x320?text=Rental+Property";
 
   return (
 
@@ -16,13 +10,14 @@ const PropertyCard = ({ property }) => {
 
       <div className="relative">
         <img
-          src={coverImage}
+          src={property.image || "https://via.placeholder.com/500x320?text=Rental+Property"}
           alt={property.title}
           className="h-52 w-full object-cover"
         />
-        {displayImages.length > 1 && (
-          <span className="absolute left-3 top-3 rounded-full bg-slate-950/85 px-3 py-1 text-xs font-semibold text-white shadow">
-            {displayImages.length} photos
+
+        {property.bachelorAllowed && (
+          <span className="absolute left-3 top-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow">
+            Bachelor Friendly
           </span>
         )}
       </div>

@@ -11,16 +11,11 @@ const {
   getMyProperties,
   saveProperty,
   removeSavedProperty,
-  contactLandlord,
-  getLandlordContactDetails
+  contactLandlord
 } = require("../controllers/propertyController");
 
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 const upload = require("../utils/upload");
-const propertyImagesUpload = upload.fields([
-  { name: "images", maxCount: 8 },
-  { name: "image", maxCount: 1 }
-]);
 
 
 /* =========================
@@ -32,7 +27,7 @@ router.post(
   "/",
   protect,
   authorizeRoles("landlord"),
-  propertyImagesUpload,
+  upload.single("image"),
   createProperty
 );
 
@@ -49,7 +44,7 @@ router.put(
   "/:id",
   protect,
   authorizeRoles("landlord"),
-  propertyImagesUpload,
+  upload.single("image"),
   updateProperty
 );
 
@@ -107,14 +102,6 @@ router.post(
   protect,
   authorizeRoles("tenant"),
   contactLandlord
-);
-
-// Get landlord contact details
-router.get(
-  "/:id/contact-details",
-  protect,
-  authorizeRoles("tenant"),
-  getLandlordContactDetails
 );
 
 

@@ -14,8 +14,6 @@ const getAuthResponse = (user, message) => {
     _id: user._id,
     name: user.name,
     email: user.email,
-    contactNumber: user.contactNumber || "",
-    whatsappNumber: user.whatsappNumber || "",
     role: user.role,
     token: createToken(user),
     message
@@ -110,45 +108,5 @@ exports.getSavedProperties = async (req, res) => {
     .populate("savedProperties");
 
   res.json(user.savedProperties);
-
-};
-
-// UPDATE PROFILE / CONTACT DETAILS
-exports.updateProfile = async (req, res) => {
-
-  const { name, contactNumber, whatsappNumber } = req.body;
-
-  const user = await User.findById(req.user._id);
-
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  if (name !== undefined) {
-    user.name = name.trim() || user.name;
-  }
-
-  if (contactNumber !== undefined) {
-    user.contactNumber = contactNumber.trim();
-  }
-
-  if (whatsappNumber !== undefined) {
-    user.whatsappNumber = whatsappNumber.trim();
-  }
-
-  await user.save();
-
-  res.json({
-    message: "Profile updated successfully",
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      contactNumber: user.contactNumber || "",
-      whatsappNumber: user.whatsappNumber || "",
-      role: user.role
-    }
-  });
 
 };

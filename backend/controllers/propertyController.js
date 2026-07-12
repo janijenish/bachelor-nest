@@ -1,7 +1,6 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
 const cloudinary = require("../utils/cloudinary");
-const fs = require("fs/promises");
 
 const toBoolean = (value, fallback = false) => {
   if (value === undefined || value === null || value === "") {
@@ -25,68 +24,27 @@ const toNumber = (value, fallback = 0) => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
-const collectUploadedFiles = (req) => {
-  const files = [];
-
-  if (req.file) {
-    files.push(req.file);
-  }
-
-  if (Array.isArray(req.files)) {
-    files.push(...req.files);
-    return files;
-  }
-
-  if (req.files && typeof req.files === "object") {
-    Object.values(req.files).forEach((value) => {
-      if (Array.isArray(value)) {
-        files.push(...value);
-        return;
-      }
-
-      if (value) {
-        files.push(value);
-      }
-    });
-  }
-
-  return files;
-};
-
-const uploadFilesToCloudinary = async (files) => {
-  const uploadedUrls = [];
-
-  try {
-    for (const file of files) {
-      const result = await cloudinary.uploader.upload(file.path);
-      uploadedUrls.push(result.secure_url);
-    }
-  } finally {
-    await Promise.all(
-      files.map((file) => fs.unlink(file.path).catch(() => {}))
-    );
-  }
-
-  return uploadedUrls;
-};
-
 
 // CREATE PROPERTY
 exports.createProperty = async (req, res) => {
 
-  const { title, description, price, location, furnishing } = req.body;
-  const uploadedFiles = collectUploadedFiles(req);
-  const imageUrls = uploadedFiles.length ? await uploadFilesToCloudinary(uploadedFiles) : [];
+  const { title, description, price, location, bachelorAllowed, furnishing } = req.body;
+
+  let imageUrl = "";
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    imageUrl = result.secure_url;
+  }
 
   const property = await Property.create({
     title,
     description,
     price: toNumber(price),
     location,
-    bachelorAllowed: true,
+    bachelorAllowed: toBoolean(bachelorAllowed, true),
     furnishing,
-    images: imageUrls,
-    image: imageUrls[0] || "",
+    image: imageUrl,
     postedBy: req.user._id
   });
 
@@ -180,20 +138,25 @@ exports.updateProperty = async (req, res) => {
     throw new Error("Not authorized");
   }
 
-  const { title, description, price, location, furnishing } = req.body;
-  const uploadedFiles = collectUploadedFiles(req);
-  const imageUrls = uploadedFiles.length ? await uploadFilesToCloudinary(uploadedFiles) : [];
+  const { title, description, price, location, bachelorAllowed, furnishing } = req.body;
+
+  let imageUrl;
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    imageUrl = result.secure_url;
+  }
 
   property.title = title || property.title;
   property.description = description || property.description;
   property.price = price ? toNumber(price, property.price) : property.price;
   property.location = location || property.location;
-  property.bachelorAllowed = true;
+  property.bachelorAllowed =
+    bachelorAllowed === undefined || bachelorAllowed === null || bachelorAllowed === ""
+      ? property.bachelorAllowed
+      : toBoolean(bachelorAllowed, property.bachelorAllowed);
   property.furnishing = furnishing || property.furnishing;
-  if (imageUrls.length > 0) {
-    property.images = imageUrls;
-    property.image = imageUrls[0];
-  }
+  property.image = imageUrl || property.image;
 
   const updated = await property.save();
 
@@ -327,34 +290,4 @@ exports.getContactRequests = async (req, res) => {
   .select("title contactRequests");
 
   res.json(properties);
-};
-
-
-// TENANT VIEW LANDLORD CONTACT DETAILS
-exports.getLandlordContactDetails = async (req, res) => {
-
-  const property = await Property.findById(req.params.id)
-    .populate("postedBy", "name email contactNumber whatsappNumber");
-
-  if (!property) {
-    res.status(404);
-    throw new Error("Property not found");
-  }
-
-  if (!property.postedBy) {
-    res.status(404);
-    throw new Error("Landlord contact details not available");
-  }
-
-  res.json({
-    propertyId: property._id,
-    propertyTitle: property.title,
-    landlord: {
-      name: property.postedBy.name,
-      email: property.postedBy.email,
-      contactNumber: property.postedBy.contactNumber || "",
-      whatsappNumber: property.postedBy.whatsappNumber || ""
-    }
-  });
-
 };
