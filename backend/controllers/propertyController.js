@@ -2,6 +2,7 @@ const Property = require("../models/Property");
 const User = require("../models/User");
 const cloudinary = require("../utils/cloudinary");
 const fs = require("fs/promises");
+const path = require("path");
 
 const toNumber = (value, fallback = 0) => {
   if (value === undefined || value === null || value === "") {
@@ -13,16 +14,22 @@ const toNumber = (value, fallback = 0) => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+
 const uploadImageToCloudinary = async (file) => {
-  if (!file) {
-    return "";
-  }
+  if (!file) return "";
+
+  console.log("FILE OBJECT:", file);
+  console.log("FILE PATH:", file.path);
+  console.log("ABSOLUTE PATH:", path.resolve(file.path));
 
   try {
-    const result = await cloudinary.uploader.upload(file.path);
+    const result = await cloudinary.uploader.upload(
+      path.resolve(file.path)
+    );
+
     return result.secure_url;
   } finally {
-    await fs.unlink(file.path).catch(() => {});
+    await fs.unlink(path.resolve(file.path)).catch(console.error);
   }
 };
 
